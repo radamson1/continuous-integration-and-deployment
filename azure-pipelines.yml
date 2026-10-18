@@ -1,5 +1,13 @@
 trigger:
-- main
+  branches:
+    include:
+    - main
+    - add-test-cases
+
+pr:
+  branches:
+    include:
+    - main
 
 strategy:
   matrix:
