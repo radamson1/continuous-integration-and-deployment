@@ -71,7 +71,7 @@ stages:
                 - task: AzureRmWebAppDeployment@4
                   inputs:
                     ConnectionType: 'AzureRM'
-                    azureSubscription: 'azure-sub'
+                    azureSubscription: 'azure_sub'
                     appType: 'webAppLinux'
                     WebAppName: 'UNIQUE-flask'
                     packageForLinux: '$(Pipeline.Workspace)/package/*.zip'
