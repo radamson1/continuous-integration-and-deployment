@@ -103,15 +103,16 @@ def test_add_review(client, sample_data):
 
 
 def test_get_average_rating(client, sample_data):
-    """
-    TODO: implement test to get average rating
+    restaurant = Restaurant.query.filter_by(name='Test Restaurant').first()
+    avg_rating = get_average_rating(restaurant.id)
 
-    """
-    pass
+    assert avg_rating == Decimal('4.5'), f"Expected 4.5, but got {avg_rating}"
 
 def test_get_average_rating_no_reviews(client):
-    """
-    TODO: implement test to get average rating when no review has been submitted for the restaurant
+    restaurant = Restaurant(name='No Reviews Restaurant', street_address='123 No Review St', phone='000-000-0000', description='No reviews')
+    db.session.add(restaurant)
+    db.session.commit()
 
-    """
-    pass
+    avg_rating = get_average_rating(restaurant.id)
+
+    assert avg_rating is None, f"Expected None, but got {avg_rating}"
