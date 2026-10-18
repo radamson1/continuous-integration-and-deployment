@@ -1,0 +1,29 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Restaurant Listings{% endblock %}
+
+{% block content %}
+<h1>Restaurant Listings</h1>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Phone</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for restaurant in restaurants %}
+        <tr>
+            <td><a href="{{ url_for('restaurant_detail', restaurant_id=restaurant.id) }}">{{ restaurant.name }}</a></td>
+            <td>{{ restaurant.street_address }}</td>
+            <td>{{ restaurant.phone }}</td>
+            <td>{{ restaurant.description }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

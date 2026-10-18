@@ -1,0 +1,94 @@
+<!-- Other templates -->
+{% extends 'base.html' %} 
+{% block title %}{{ restaurant.name }} {% endblock %} 
+{% block content %}
+<h1>{{ restaurant.name }}</h1>
+<div class="card">
+    <div class="card-body">
+        <p><strong>Address:</strong> {{ restaurant.street_address }}</p>
+        <p><strong>Phone:</strong> {{ restaurant.phone }}</p>
+        <p><strong>Description:</strong> {{ restaurant.description }}</p>
+        <p><strong>Rating:</strong> {{ rating }}
+
+        <span class="rating">
+            {% for star in range(1, 6) %}
+              {% if star <= stars %}
+                <i class="fa fa-star checked" style="color: rgba(255, 204, 0, 0.826)"></i>
+              {% else %}
+                <i class="fa fa-star"></i>
+              {% endif %}
+            {% endfor %}
+        </span> ({{reviews|length }} reviews)
+    </p>
+    </div>
+</div>
+  
+<br>
+
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-success" data-toggle="modal" data-target="#reviewModal">
+    Add new review
+</button>
+<h2>Reviews:</h2>
+{% if reviews %}
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Review</th>
+      <th>Rating</th>
+      <th>Reviewed By</th>
+      <th>Date Reviewed</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for review in reviews %}
+    <tr>
+      <td>{{ review.review }}</td>
+      <td>{{ review.rating }}</td>
+      <td>{{ review.reviewer.name }}</td>  <td>{{ review.date_reviewed }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No reviews yet.</p>
+{% endif %}
+
+
+<!-- Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" role="dialog" aria-labelledby="reviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reviewModalLabel">Add Review</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="{{ url_for('add_review', restaurant_id=restaurant.id) }}" method="post">
+          <div class="form-group">
+            <label for="review">Review:</label>
+            <textarea class="form-control" id="review" name="review" rows="5" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="rating">Rating (1-5):</label>
+            <input type="number" class="form-control" id="rating" name="rating" min="1" max="5" required>
+          </div>
+          <div class="form-group">
+            <label for="user_id">Reviewer:</label>
+            <select class="form-control" id="user_id" name="user_id" required>
+              {% for user in users %}
+              <option value="{{ user.id }}">{{ user.username }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <br>
+          <button type="submit" class="btn btn-primary">Submit Review</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
