@@ -1,52 +1,99 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+variables:
+  - name: python_version
+    value: '<python-version-value>' # TODO 1 Replace python-version-value with 3.12
+
 trigger:
-  branches:
-    include:
-    - main
-    - add-test-cases
-
-pr:
-  branches:
-    include:
-    - main
-
-strategy:
-  matrix:
-    python311:
-      python_version: "3.11"
-    python312:
-      python_version: "3.12"
-  maxParallel: 2
+  - main
 
 pool:
   vmImage: ubuntu-latest
 
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '$(python_version)'
-    addToPath: true
-    architecture: 'x64'
+stages:
+  - stage: Testing
+    jobs:
+      - job: Testing
+        continueOnError: false
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: ${{ variables.<python-variable-name> }} # TODO 2: Replace <python-variable-name> with the variable declared at the top. That is, the variable name used for the version of python to use
+              addToPath: true
+              architecture: 'x64'
+          
+          # Script to create virtual environment and install dependencies
+          - script: |
+              python3 -m venv .venv
+              source .venv/bin/activate
+              pip install -r requirements.txt
+              pip install pytest pytest-azurepipelines
+              pytest
+            displayName: 'pytest'
 
-- script: |
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-  displayName: 'Install dependencies'
+          # Remove the virtual environment before packaging the app
+          - script: rm -rf .venv
+            workingDirectory: '$(System.DefaultWorkingDirectory)'
+            displayName: 'Remove local venv before packaging'
+          
+          # TODO 3:  Archive Files
+          # Copy the ArchiveFiles@2 task from the "PUBLISHING THE BUILD ARTIFACTS" task and paste it under this comment block.
+          # Please do NOT make any changes to this task.
 
-- script: |
-    pip install pytest pytest-azurepipelines
-    pytest
-  displayName: 'pytest'
+          
+          
+          # TODO: 4 Publish Build Artifact
+          # Copy the PublishBuildArtifacts@1 task from the "PUBLISHING THE BUILD ARTIFACTS" task and paste it under this comment block.
+          # Please do NOT make any changes to this task.
 
-- task: ArchiveFiles@2
-  inputs:
-    rootFolderOrFile: '$(Build.SourcesDirectory)'
-    includeRootFolder: false
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId)-$(python_version).zip'
-    replaceExistingArchive: true
+          
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'package'
-    publishLocation: 'Container'
+
+  - stage: Deploy
+    dependsOn: Testing
+    jobs:
+      - deployment: Deploy
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+
+                # TODO 5: 
+                # In this task, we want to get the artifact that was published in the Testing stage. To do this, we need the
+                # DownloadPipelineArtifact@2 task. This task will download the file that was archived and published in the previous
+                # stage. Follow the following steps to accomplish this:
+                #   1. Search for "download pipeline artifacts" in the search bar
+                #   2. Click on the "Download Pipeline Artifacts" task
+                #   3. For "Download artifacts produced by", select Current run.
+                #   4. Leave artifact name empty
+                #   4. For "Matching patterns", enter package/*.zip. This tells the pipeline to look for the zipped file from the previous stage
+                #   5. For "Destination directory", we use the default, $(Pipeline.Workspace).
+                #   6. Click on the "Add" button
+               
+
+               # TODO 6:
+               # In this task, you will deploy the downloaded source code from the ownloadPipelineArtifact@2 task to Azure.
+               # Please follow these steps to accomplish this:
+               # 1. Search for azure app service deploy
+               # 2. Select the "Azure App Service Deploy" task
+               # 3. For Connection type, select "Azure Resource Manager"
+               # 4. For Azure subscription, select your Azure subscription. Click on "Authorize"
+               # 5. For App Service type, select "Web App on Linux"
+               # 5. For App Service name, select the app service you created
+               # 6. For Package or folder, replace everything in the text field with $(Pipeline.Workspace)/package/*.zip
+               #     Here, we are telling this task to look in the package folder for a zip file. That is the zip file to be deployed
+               # 7. For Startup command, enter flask db upgrade && gunicorn -w 4 -b 0.0.0.0:8000 app:app
+               #    We are telling Azure App Service, to run the database migrations and start the app.
+               # 8. Scroll down to Application and Configuration Settings, and under App settings, include the following parameters:
+               #     -SCM_DO_BUILD_DURING_DEPLOYMENT true -WEBSITE_ENABLE_SYNC_UPDATE_SITE true
+               # 9. Click on the "Add" button
+               # 10. Review your pipeline to ensure that you've done all required configurations
+               # 11. Click on "Save and run"
+               # 12. You will have to manually grant permissions to the "Deploy" job. Further instructions are provided
+               #      in the write-up for Task 5.
+               
+                    
