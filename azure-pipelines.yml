@@ -1,29 +1,23 @@
 trigger:
 - main
 
+strategy:
+  matrix:
+    python311:
+      python_version: "3.11"
+    python312:
+      python_version: "3.12"
+  maxParallel: 2
+
 pool:
   vmImage: ubuntu-latest
 
 steps:
 - task: UsePythonVersion@0
   inputs:
-    versionSpec: '3.12'
+    versionSpec: '$(python_version)'
     addToPath: true
     architecture: 'x64'
-
-- task: ArchiveFiles@2
-  inputs:
-    rootFolderOrFile: '$(Build.SourcesDirectory)'
-    includeRootFolder: false
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-    replaceExistingArchive: true
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'package'
-    publishLocation: 'Container'
 
 - script: |
     python -m pip install --upgrade pip
@@ -34,3 +28,17 @@ steps:
     pip install pytest pytest-azurepipelines
     pytest
   displayName: 'pytest'
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId)-$(python_version).zip'
+    replaceExistingArchive: true
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'package'
+    publishLocation: 'Container'
